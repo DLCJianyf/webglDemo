@@ -1,7 +1,7 @@
 # webglDemo
 
-#2D
+# canvas
 ![image](https://github.com/DLCJianyf/webglDemo/blob/master/IMG_1640.GIF)
 
-#3D
+# webgl
 ![image](https://github.com/DLCJianyf/webglDemo/blob/master/IMG_1658.GIF)
