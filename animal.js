@@ -1,5 +1,4 @@
-(function (win) {
-
+(function(win) {
     var minR = 1;
     var maxR = 3;
     var v = [-1, 1];
@@ -22,18 +21,20 @@
     }
 
     function lengthOfEdge(edge) {
-        return Math.sqrt(Math.pow((edge.from.x - edge.to.x), 2) + Math.pow((edge.from.y - edge.to.y), 2));
+        return Math.sqrt(
+            Math.pow(edge.from.x - edge.to.x, 2) + Math.pow(edge.from.y - edge.to.y, 2)
+        );
     }
 
     function adjustNodeDrivenByMouse() {
-        if(!nodes.length) return;
+        if (!nodes.length) return;
         nodes[0].x += (mousePos[0] - nodes[0].x) / easingFactor;
         nodes[0].y += (mousePos[1] - nodes[0].y) / easingFactor;
     }
 
-    function Node() {};
+    function Node() {}
     Node.prototype = {
-        init: function () {
+        init: function() {
             this.x = random(0, win.innerWidth);
             this.y = random(0, win.innerWidth);
             this.r = random(minR, maxR);
@@ -45,14 +46,14 @@
             this.vy = random(-1, 1);
         },
 
-        draw: function () {
-            animate.ctx.beginPath();
-            animate.ctx.fillStyle = this.color;
-            animate.ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-            animate.ctx.fill();
+        draw: function() {
+            animate.offCtx.beginPath();
+            animate.offCtx.fillStyle = this.color;
+            animate.offCtx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+            animate.offCtx.fill();
         },
 
-        move: function () {
+        move: function() {
             this.x += this.vx * this.speed;
             this.y += this.vy * this.speed;
 
@@ -63,7 +64,7 @@
         }
     };
 
-    function Edge() {};
+    function Edge() {}
     Edge.prototype = {
         init: function(from, to) {
             this.from = from;
@@ -73,38 +74,47 @@
         draw: function() {
             var l = lengthOfEdge(this);
             var threshold = win.innerWidth / 20;
-            if(l > threshold) {
+            if (l > threshold) {
                 return;
             }
 
-            animate.ctx.strokeStyle = edgeColor;
-            animate.ctx.lineWidth = (1.0 - l / threshold) * 2.5;
-            animate.ctx.globalAlpha = 1.0 - l / threshold;
-            animate.ctx.beginPath();
-            animate.ctx.moveTo(this.from.x, this.from.y);
-            animate.ctx.lineTo(this.to.x, this.to.y);
-            animate.ctx.stroke();
+            animate.offCtx.strokeStyle = edgeColor;
+            animate.offCtx.lineWidth = (1.0 - l / threshold) * 2.5;
+            animate.offCtx.globalAlpha = 1.0 - l / threshold;
+            animate.offCtx.beginPath();
+            animate.offCtx.moveTo(this.from.x, this.from.y);
+            animate.offCtx.lineTo(this.to.x, this.to.y);
+            animate.offCtx.stroke();
         }
     };
 
     var animate = {
-
         ctx: null,
+
+        offCtx: null,
 
         canvas: null,
 
-        initCanvas: function () {
+        offCanvas: null,
+
+        initCanvas: function() {
             if (!this.canvas) {
                 this.canvas = document.querySelector("#canvas");
+                this.ctx = this.getCtx(w, h, this.canvas, false);
 
-                this.canvas.width = w;
-                this.canvas.height = h;
-
-                this.ctx = this.canvas.getContext("2d");
+                this.offCanvas = document.createElement("canvas");
+                this.offCtx = this.getCtx(w, h, this.offCanvas, true);
             }
         },
 
-        addNodes: function (num) {
+        getCtx(w, h, canvas, isOffCanvas) {
+            canvas.width = w;
+            canvas.height = h;
+
+            return canvas.getContext("2d", { willReadFrequently: isOffCanvas });
+        },
+
+        addNodes: function(num) {
             nodes = [];
             for (var i = 0; i < num; i++) {
                 var node = new Node();
@@ -117,9 +127,9 @@
             var n1;
             var n2;
             edges = [];
-            for(var i = 0; i < nodes.length; i ++) {
+            for (var i = 0; i < nodes.length; i++) {
                 n1 = nodes[i];
-                for(var j = i + 1; j < nodes.length; j ++) {
+                for (var j = i + 1; j < nodes.length; j++) {
                     n2 = nodes[j];
 
                     var edge = new Edge();
@@ -129,9 +139,9 @@
             }
         },
 
-        clear: function () {
-            this.ctx.clearRect(0, 0, win.innerWidth, win.innerHeight);
-            this.ctx.globalAlpha = 1.0;
+        clear: function() {
+            this.offCtx.clearRect(0, 0, win.innerWidth, win.innerHeight);
+            this.offCtx.globalAlpha = 1.0;
         },
 
         step: function() {
@@ -140,11 +150,13 @@
             for (var node of nodes) {
                 node.move();
             }
-    
-            for(var edge of edges) {
+
+            for (var edge of edges) {
                 edge.draw();
             }
-    
+
+            animate.ctx.putImageData(animate.offCtx.getImageData(0, 0, w, h), 0, 0);
+
             win.requestAnimationFrame(animate.step);
         }
     };
@@ -152,12 +164,12 @@
     animate.initCanvas();
     animate.step();
 
-    win.onmousemove = function (e) {
+    win.onmousemove = function(e) {
         mousePos[0] = e.clientX;
         mousePos[1] = e.clientY;
-    }
+    };
 
-    win.onresize = function () {
+    win.onresize = function() {
         if (animate.canvas) {
             animate.canvas.width = win.innerWidth;
             animate.canvas.height = win.innerHeight;
@@ -165,7 +177,6 @@
             animate.addNodes(nodeNum);
             animate.addEdges(nodes);
         }
-    }
+    };
     win.onresize();
-
 })(window);
